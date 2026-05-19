@@ -1,0 +1,95 @@
+.section {
+  padding: var(--space-24) 0;
+  background: linear-gradient(to bottom, transparent, rgba(99,102,241,0.03), transparent);
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: var(--space-10) 0;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--color-border);
+  transition: all var(--transition-fast);
+}
+
+.filterBtn:hover {
+  color: var(--color-text);
+  background: rgba(255,255,255,0.08);
+}
+
+.filterActive {
+  background: rgba(99,102,241,0.15) !important;
+  color: var(--color-primary-light) !important;
+  border-color: rgba(99,102,241,0.3) !important;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.skillCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.skillCard:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-2px);
+}
+
+.skillHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.skillName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.skillLevel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary-light);
+  font-family: var(--font-mono);
+}
+
+.bar {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  width: var(--w, 0%);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
+}
