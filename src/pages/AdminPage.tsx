@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { usePortfolio } from '@/context/PortfolioContext';
 import type { Profile, Testimonial } from '@/context/PortfolioContext';
 import type { Project, Skill, Experience } from '@/types';
-import { Plus, Trash2, Save, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, Save, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import styles from './AdminPage.module.css';
 
 type Tab = 'profile' | 'projects' | 'skills' | 'experiences' | 'testimonials';
@@ -11,12 +11,21 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('profile');
   const ctx = usePortfolio();
 
+  if (ctx.loading) {
+    return (
+      <div className={styles.loadingWrap}>
+        <Loader2 size={32} className={styles.loadingSpinner} />
+        <p>Loading data from Supabase...</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
         <div className={styles.header}>
           <h1 className={styles.title}>Portfolio Admin</h1>
-          <p className={styles.subtitle}>All changes are saved automatically to your browser's local storage and persist across page refreshes.</p>
+          <p className={styles.subtitle}>Changes are saved directly to Supabase and reflect instantly across your portfolio.</p>
         </div>
 
         <div className={styles.tabs}>
@@ -33,10 +42,10 @@ export default function AdminPage() {
 
         <div className={styles.content}>
           {tab === 'profile' && <ProfileEditor profile={ctx.profile} setProfile={ctx.setProfile} />}
-          {tab === 'projects' && <ProjectsEditor projects={ctx.projects} setProjects={ctx.setProjects} />}
+          {tab === 'projects' && <ProjectsEditor projects={ctx.projects} setProjects={ctx.setProjects} addProject={ctx.addProject} updateProject={ctx.updateProject} removeProject={ctx.removeProject} />}
           {tab === 'skills' && <SkillsEditor skills={ctx.skills} setSkills={ctx.setSkills} />}
-          {tab === 'experiences' && <ExperiencesEditor experiences={ctx.experiences} setExperiences={ctx.setExperiences} />}
-          {tab === 'testimonials' && <TestimonialsEditor testimonials={ctx.testimonials} setTestimonials={ctx.setTestimonials} />}
+          {tab === 'experiences' && <ExperiencesEditor experiences={ctx.experiences} setExperiences={ctx.setExperiences} addExperience={ctx.addExperience} updateExperience={ctx.updateExperience} removeExperience={ctx.removeExperience} />}
+          {tab === 'testimonials' && <TestimonialsEditor testimonials={ctx.testimonials} setTestimonials={ctx.setTestimonials} addTestimonial={ctx.addTestimonial} updateTestimonial={ctx.updateTestimonial} removeTestimonial={ctx.removeTestimonial} />}
         </div>
       </div>
     </div>
@@ -45,8 +54,9 @@ export default function AdminPage() {
 
 // ─── Profile Editor ──────────────────────────────────────────────────────────
 
-function ProfileEditor({ profile, setProfile }: { profile: Profile; setProfile: (p: Profile) => void }) {
+function ProfileEditor({ profile, setProfile }: { profile: Profile; setProfile: (p: Profile) => Promise<void> }) {
   const [local, setLocal] = useState<Profile>({ ...profile });
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -54,8 +64,10 @@ function ProfileEditor({ profile, setProfile }: { profile: Profile; setProfile: 
     setSaved(false);
   }
 
-  function handleSave() {
-    setProfile(local);
+  async function handleSave() {
+    setSaving(true);
+    await setProfile(local);
+    setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -107,8 +119,9 @@ function ProfileEditor({ profile, setProfile }: { profile: Profile; setProfile: 
           </div>
         ))}
       </div>
-      <button onClick={handleSave} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
-        <Save size={15} /> {saved ? 'Saved!' : 'Save Profile'}
+      <button onClick={handleSave} disabled={saving} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
+        {saving ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
+        {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Profile'}
       </button>
     </div>
   );
@@ -116,21 +129,34 @@ function ProfileEditor({ profile, setProfile }: { profile: Profile; setProfile: 
 
 // ─── Projects Editor ─────────────────────────────────────────────────────────
 
-function ProjectsEditor({ projects, setProjects }: { projects: Project[]; setProjects: (p: Project[]) => void }) {
+function ProjectsEditor({
+  projects,
+  setProjects,
+  addProject,
+  updateProject,
+  removeProject,
+}: {
+  projects: Project[];
+  setProjects: (p: Project[]) => Promise<void>;
+  addProject: (p: Project) => Promise<void>;
+  updateProject: (p: Project) => Promise<void>;
+  removeProject: (id: string) => Promise<void>;
+}) {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [local, setLocal] = useState<Project[]>(projects.map((p) => ({ ...p })));
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
 
   function update(id: string, field: keyof Project, value: any) {
     setLocal((prev) => prev.map((p) => p.id === id ? { ...p, [field]: value } : p));
-    setSaved(false);
   }
 
   function updateTags(id: string, raw: string) {
     update(id, 'tags', raw.split(',').map((t) => t.trim()).filter(Boolean));
   }
 
-  function addProject() {
+  async function handleAddProject() {
     const newP: Project = {
       id: `p${Date.now()}`,
       title: 'New Project',
@@ -144,27 +170,30 @@ function ProjectsEditor({ projects, setProjects }: { projects: Project[]; setPro
     };
     setLocal((prev) => [newP, ...prev]);
     setExpanded(newP.id);
-    setSaved(false);
+    await addProject(newP);
   }
 
-  function removeProject(id: string) {
+  async function handleRemoveProject(id: string) {
+    setRemoving(id);
+    await removeProject(id);
     setLocal((prev) => prev.filter((p) => p.id !== id));
-    setSaved(false);
+    setRemoving(null);
   }
 
-  function handleSave() {
-    setProjects(local);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave(id: string) {
+    const project = local.find((p) => p.id === id);
+    if (!project) return;
+    setSaving(id);
+    await updateProject(project);
+    setSaving(null);
+    setSaved(id);
+    setTimeout(() => setSaved(null), 2000);
   }
 
   return (
     <div className={styles.editorSection}>
       <div className={styles.listHeader}>
-        <button onClick={addProject} className={styles.addBtn}><Plus size={14} /> Add Project</button>
-        <button onClick={handleSave} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
-          <Save size={15} /> {saved ? 'Saved!' : 'Save All'}
-        </button>
+        <button onClick={handleAddProject} className={styles.addBtn}><Plus size={14} /> Add Project</button>
       </div>
       <div className={styles.list}>
         {local.map((p) => (
@@ -172,7 +201,13 @@ function ProjectsEditor({ projects, setProjects }: { projects: Project[]; setPro
             <div className={styles.listItemHeader} onClick={() => setExpanded(expanded === p.id ? null : p.id)}>
               <span className={styles.listItemTitle}>{p.title || 'Untitled'}</span>
               <div className={styles.listItemActions}>
-                <button onClick={(e) => { e.stopPropagation(); removeProject(p.id); }} className={styles.deleteBtn}><Trash2 size={14} /></button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemoveProject(p.id); }}
+                  className={styles.deleteBtn}
+                  disabled={removing === p.id}
+                >
+                  {removing === p.id ? <Loader2 size={14} className={styles.spinIcon} /> : <Trash2 size={14} />}
+                </button>
                 {expanded === p.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </div>
             </div>
@@ -231,6 +266,14 @@ function ProjectsEditor({ projects, setProjects }: { projects: Project[]; setPro
                     </label>
                   </div>
                 </div>
+                <button
+                  onClick={() => handleSave(p.id)}
+                  disabled={saving === p.id}
+                  className={`${styles.saveBtn} ${saved === p.id ? styles.savedBtn : ''}`}
+                >
+                  {saving === p.id ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
+                  {saving === p.id ? 'Saving...' : saved === p.id ? 'Saved!' : 'Save Project'}
+                </button>
               </div>
             )}
           </div>
@@ -242,8 +285,9 @@ function ProjectsEditor({ projects, setProjects }: { projects: Project[]; setPro
 
 // ─── Skills Editor ───────────────────────────────────────────────────────────
 
-function SkillsEditor({ skills, setSkills }: { skills: Skill[]; setSkills: (s: Skill[]) => void }) {
+function SkillsEditor({ skills, setSkills }: { skills: Skill[]; setSkills: (s: Skill[]) => Promise<void> }) {
   const [local, setLocal] = useState<Skill[]>(skills.map((s) => ({ ...s })));
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   function update(index: number, field: keyof Skill, value: any) {
@@ -261,8 +305,10 @@ function SkillsEditor({ skills, setSkills }: { skills: Skill[]; setSkills: (s: S
     setSaved(false);
   }
 
-  function handleSave() {
-    setSkills(local);
+  async function handleSave() {
+    setSaving(true);
+    await setSkills(local);
+    setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -271,8 +317,9 @@ function SkillsEditor({ skills, setSkills }: { skills: Skill[]; setSkills: (s: S
     <div className={styles.editorSection}>
       <div className={styles.listHeader}>
         <button onClick={addSkill} className={styles.addBtn}><Plus size={14} /> Add Skill</button>
-        <button onClick={handleSave} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
-          <Save size={15} /> {saved ? 'Saved!' : 'Save All'}
+        <button onClick={handleSave} disabled={saving} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
+          {saving ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
+          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save All'}
         </button>
       </div>
       <div className={styles.skillRows}>
@@ -315,17 +362,30 @@ function SkillsEditor({ skills, setSkills }: { skills: Skill[]; setSkills: (s: S
 
 // ─── Experiences Editor ──────────────────────────────────────────────────────
 
-function ExperiencesEditor({ experiences, setExperiences }: { experiences: Experience[]; setExperiences: (e: Experience[]) => void }) {
+function ExperiencesEditor({
+  experiences,
+  setExperiences,
+  addExperience,
+  updateExperience,
+  removeExperience,
+}: {
+  experiences: Experience[];
+  setExperiences: (e: Experience[]) => Promise<void>;
+  addExperience: (e: Experience) => Promise<void>;
+  updateExperience: (e: Experience) => Promise<void>;
+  removeExperience: (id: string) => Promise<void>;
+}) {
   const [local, setLocal] = useState<Experience[]>(experiences.map((e) => ({ ...e, description: [...e.description], tech: [...e.tech] })));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
 
   function update(id: string, field: keyof Experience, value: any) {
     setLocal((prev) => prev.map((e) => e.id === id ? { ...e, [field]: value } : e));
-    setSaved(false);
   }
 
-  function addExperience() {
+  async function handleAdd() {
     const newE: Experience = {
       id: `e${Date.now()}`,
       company: 'Company',
@@ -336,27 +396,30 @@ function ExperiencesEditor({ experiences, setExperiences }: { experiences: Exper
     };
     setLocal((prev) => [newE, ...prev]);
     setExpanded(newE.id);
-    setSaved(false);
+    await addExperience(newE);
   }
 
-  function removeExperience(id: string) {
+  async function handleRemove(id: string) {
+    setRemoving(id);
+    await removeExperience(id);
     setLocal((prev) => prev.filter((e) => e.id !== id));
-    setSaved(false);
+    setRemoving(null);
   }
 
-  function handleSave() {
-    setExperiences(local);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave(id: string) {
+    const exp = local.find((e) => e.id === id);
+    if (!exp) return;
+    setSaving(id);
+    await updateExperience(exp);
+    setSaving(null);
+    setSaved(id);
+    setTimeout(() => setSaved(null), 2000);
   }
 
   return (
     <div className={styles.editorSection}>
       <div className={styles.listHeader}>
-        <button onClick={addExperience} className={styles.addBtn}><Plus size={14} /> Add Experience</button>
-        <button onClick={handleSave} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
-          <Save size={15} /> {saved ? 'Saved!' : 'Save All'}
-        </button>
+        <button onClick={handleAdd} className={styles.addBtn}><Plus size={14} /> Add Experience</button>
       </div>
       <div className={styles.list}>
         {local.map((exp) => (
@@ -364,7 +427,13 @@ function ExperiencesEditor({ experiences, setExperiences }: { experiences: Exper
             <div className={styles.listItemHeader} onClick={() => setExpanded(expanded === exp.id ? null : exp.id)}>
               <span className={styles.listItemTitle}>{exp.role} @ {exp.company}</span>
               <div className={styles.listItemActions}>
-                <button onClick={(e) => { e.stopPropagation(); removeExperience(exp.id); }} className={styles.deleteBtn}><Trash2 size={14} /></button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemove(exp.id); }}
+                  className={styles.deleteBtn}
+                  disabled={removing === exp.id}
+                >
+                  {removing === exp.id ? <Loader2 size={14} className={styles.spinIcon} /> : <Trash2 size={14} />}
+                </button>
                 {expanded === exp.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </div>
             </div>
@@ -397,6 +466,14 @@ function ExperiencesEditor({ experiences, setExperiences }: { experiences: Exper
                     />
                   </div>
                 </div>
+                <button
+                  onClick={() => handleSave(exp.id)}
+                  disabled={saving === exp.id}
+                  className={`${styles.saveBtn} ${saved === exp.id ? styles.savedBtn : ''}`}
+                >
+                  {saving === exp.id ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
+                  {saving === exp.id ? 'Saving...' : saved === exp.id ? 'Saved!' : 'Save Experience'}
+                </button>
               </div>
             )}
           </div>
@@ -408,17 +485,30 @@ function ExperiencesEditor({ experiences, setExperiences }: { experiences: Exper
 
 // ─── Testimonials Editor ─────────────────────────────────────────────────────
 
-function TestimonialsEditor({ testimonials, setTestimonials }: { testimonials: Testimonial[]; setTestimonials: (t: Testimonial[]) => void }) {
+function TestimonialsEditor({
+  testimonials,
+  setTestimonials,
+  addTestimonial,
+  updateTestimonial,
+  removeTestimonial,
+}: {
+  testimonials: Testimonial[];
+  setTestimonials: (t: Testimonial[]) => Promise<void>;
+  addTestimonial: (t: Testimonial) => Promise<void>;
+  updateTestimonial: (t: Testimonial) => Promise<void>;
+  removeTestimonial: (id: string) => Promise<void>;
+}) {
   const [local, setLocal] = useState<Testimonial[]>(testimonials.map((t) => ({ ...t })));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
 
   function update(id: string, field: keyof Testimonial, value: any) {
     setLocal((prev) => prev.map((t) => t.id === id ? { ...t, [field]: value } : t));
-    setSaved(false);
   }
 
-  function addTestimonial() {
+  async function handleAdd() {
     const newT: Testimonial = {
       id: `t${Date.now()}`,
       quote: 'A wonderful testimonial.',
@@ -430,18 +520,24 @@ function TestimonialsEditor({ testimonials, setTestimonials }: { testimonials: T
     };
     setLocal((prev) => [...prev, newT]);
     setExpanded(newT.id);
-    setSaved(false);
+    await addTestimonial(newT);
   }
 
-  function removeTestimonial(id: string) {
+  async function handleRemove(id: string) {
+    setRemoving(id);
+    await removeTestimonial(id);
     setLocal((prev) => prev.filter((t) => t.id !== id));
-    setSaved(false);
+    setRemoving(null);
   }
 
-  function handleSave() {
-    setTestimonials(local);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave(id: string) {
+    const t = local.find((x) => x.id === id);
+    if (!t) return;
+    setSaving(id);
+    await updateTestimonial(t);
+    setSaving(null);
+    setSaved(id);
+    setTimeout(() => setSaved(null), 2000);
   }
 
   const colorOptions = ['#6366f1', '#f472b6', '#34d399', '#f59e0b', '#60a5fa', '#a78bfa', '#fb923c'];
@@ -449,10 +545,7 @@ function TestimonialsEditor({ testimonials, setTestimonials }: { testimonials: T
   return (
     <div className={styles.editorSection}>
       <div className={styles.listHeader}>
-        <button onClick={addTestimonial} className={styles.addBtn}><Plus size={14} /> Add Testimonial</button>
-        <button onClick={handleSave} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
-          <Save size={15} /> {saved ? 'Saved!' : 'Save All'}
-        </button>
+        <button onClick={handleAdd} className={styles.addBtn}><Plus size={14} /> Add Testimonial</button>
       </div>
       <div className={styles.list}>
         {local.map((t) => (
@@ -460,7 +553,13 @@ function TestimonialsEditor({ testimonials, setTestimonials }: { testimonials: T
             <div className={styles.listItemHeader} onClick={() => setExpanded(expanded === t.id ? null : t.id)}>
               <span className={styles.listItemTitle}>{t.name} @ {t.company}</span>
               <div className={styles.listItemActions}>
-                <button onClick={(e) => { e.stopPropagation(); removeTestimonial(t.id); }} className={styles.deleteBtn}><Trash2 size={14} /></button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemove(t.id); }}
+                  className={styles.deleteBtn}
+                  disabled={removing === t.id}
+                >
+                  {removing === t.id ? <Loader2 size={14} className={styles.spinIcon} /> : <Trash2 size={14} />}
+                </button>
                 {expanded === t.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </div>
             </div>
@@ -502,6 +601,14 @@ function TestimonialsEditor({ testimonials, setTestimonials }: { testimonials: T
                     </div>
                   </div>
                 </div>
+                <button
+                  onClick={() => handleSave(t.id)}
+                  disabled={saving === t.id}
+                  className={`${styles.saveBtn} ${saved === t.id ? styles.savedBtn : ''}`}
+                >
+                  {saving === t.id ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
+                  {saving === t.id ? 'Saving...' : saved === t.id ? 'Saved!' : 'Save Testimonial'}
+                </button>
               </div>
             )}
           </div>
