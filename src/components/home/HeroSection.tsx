@@ -1,8 +1,11 @@
 import { ArrowRight, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { usePortfolio } from '@/context/PortfolioContext';
 import styles from './HeroSection.module.css';
 
 export default function HeroSection() {
+  const { profile } = usePortfolio();
+
   return (
     <section className={styles.hero}>
       <div className={styles.bg}>
@@ -13,19 +16,12 @@ export default function HeroSection() {
       <div className={styles.inner}>
         <div className={styles.badge}>
           <span className={styles.dot} />
-          Available for work
+          {profile.heroTagline}
         </div>
         <h1 className={styles.heading}>
-          I craft digital
-          <br />
-          <span className={styles.gradient}>experiences</span>
-          <br />
-          that matter
+          <span className={styles.gradient}>{profile.heroHeading}</span>
         </h1>
-        <p className={styles.sub}>
-          Full-stack developer & designer specialising in React, TypeScript, and beautiful
-          interfaces. I turn complex problems into elegant, performant solutions.
-        </p>
+        <p className={styles.sub}>{profile.heroSub}</p>
         <div className={styles.actions}>
           <Link to="/projects" className={styles.primaryBtn}>
             View my work
@@ -38,17 +34,17 @@ export default function HeroSection() {
         </div>
         <div className={styles.stats}>
           <div className={styles.stat}>
-            <span className={styles.statNum}>6+</span>
+            <span className={styles.statNum}>{profile.statYears}</span>
             <span className={styles.statLabel}>Years exp.</span>
           </div>
           <div className={styles.statDivider} />
           <div className={styles.stat}>
-            <span className={styles.statNum}>40+</span>
+            <span className={styles.statNum}>{profile.statProjects}</span>
             <span className={styles.statLabel}>Projects shipped</span>
           </div>
           <div className={styles.statDivider} />
           <div className={styles.stat}>
-            <span className={styles.statNum}>15+</span>
+            <span className={styles.statNum}>{profile.statClients}</span>
             <span className={styles.statLabel}>Happy clients</span>
           </div>
         </div>

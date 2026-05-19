@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import SectionTitle from '@/components/ui/SectionTitle';
 import Badge from '@/components/ui/Badge';
-import { projects } from '@/lib/data';
+import { usePortfolio } from '@/context/PortfolioContext';
 import { getProjectGradient, getProjectAccent } from '@/lib/utils';
 import { ExternalLink, Github } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ const filters: { label: string; value: Filter }[] = [
 ];
 
 export default function ProjectsPage() {
+  const { projects } = usePortfolio();
   const [active, setActive] = useState<Filter>('all');
   const filtered = active === 'all' ? projects : projects.filter((p) => p.category === active);
 

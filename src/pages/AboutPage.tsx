@@ -1,10 +1,11 @@
-import { experiences, skills } from '@/lib/data';
+import { usePortfolio } from '@/context/PortfolioContext';
 import SectionTitle from '@/components/ui/SectionTitle';
 import Badge from '@/components/ui/Badge';
 import { MapPin, Calendar, ExternalLink } from 'lucide-react';
 import styles from './AboutPage.module.css';
 
 export default function AboutPage() {
+  const { skills, experiences, profile } = usePortfolio();
   const frontendSkills = skills.filter((s) => s.category === 'frontend');
   const otherSkills = skills.filter((s) => s.category !== 'frontend');
 
@@ -17,34 +18,25 @@ export default function AboutPage() {
           <div className={styles.heroText}>
             <SectionTitle
               label="About me"
-              title="Hey, I'm Alex Rivera 👋"
+              title={`Hey, I'm ${profile.name} 👋`}
             />
-            <p className={styles.bio}>
-              I'm a full-stack developer and designer based in San Francisco. For over 6 years
-              I've been helping startups, scale-ups, and product teams ship delightful digital
-              experiences. I care deeply about performance, accessibility, and the little details
-              that make the difference between good and great.
-            </p>
-            <p className={styles.bio}>
-              When I'm not building things on a screen, you'll find me trail running, obsessing
-              over specialty coffee, or diving deep into typography rabbit holes. I believe the best
-              products are built by people who love both the craft and the problem.
-            </p>
+            <p className={styles.bio}>{profile.bio1}</p>
+            <p className={styles.bio}>{profile.bio2}</p>
             <div className={styles.heroMeta}>
               <span className={styles.metaItem}>
                 <MapPin size={14} />
-                San Francisco, CA
+                {profile.location}
               </span>
               <span className={styles.metaItem}>
                 <Calendar size={14} />
-                Available from March 2025
+                {profile.availability}
               </span>
             </div>
           </div>
           <div className={styles.heroVisual}>
             <div className={styles.avatarWrap}>
               <div className={styles.avatar}>
-                <span className={styles.avatarInitials}>AR</span>
+                <span className={styles.avatarInitials}>{profile.initials}</span>
               </div>
               <div className={styles.avatarRing} />
               <div className={styles.avatarRing2} />

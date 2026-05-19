@@ -1,6 +1,8 @@
 import { Project, Skill, Experience } from '@/types';
 
-export const projects: Project[] = [
+// ─── Default seed data ───────────────────────────────────────────────────────
+
+const defaultProjects: Project[] = [
   {
     id: 'p1',
     title: 'Lumina Dashboard',
@@ -78,7 +80,7 @@ export const projects: Project[] = [
   },
 ];
 
-export const skills: Skill[] = [
+const defaultSkills: Skill[] = [
   { name: 'React', level: 95, category: 'frontend' },
   { name: 'TypeScript', level: 92, category: 'frontend' },
   { name: 'CSS / Animations', level: 90, category: 'frontend' },
@@ -94,7 +96,7 @@ export const skills: Skill[] = [
   { name: 'Motion Design', level: 76, category: 'design' },
 ];
 
-export const experiences: Experience[] = [
+const defaultExperiences: Experience[] = [
   {
     id: 'e1',
     company: 'Vercel',
@@ -132,3 +134,131 @@ export const experiences: Experience[] = [
     tech: ['React', 'Node.js', 'WordPress', 'Figma'],
   },
 ];
+
+const defaultProfile = {
+  name: 'Alex Rivera',
+  initials: 'AR',
+  title: 'Full-Stack Developer & Designer',
+  bio1: "I'm a full-stack developer and designer based in San Francisco. For over 6 years I've been helping startups, scale-ups, and product teams ship delightful digital experiences. I care deeply about performance, accessibility, and the little details that make the difference between good and great.",
+  bio2: "When I'm not building things on a screen, you'll find me trail running, obsessing over specialty coffee, or diving deep into typography rabbit holes. I believe the best products are built by people who love both the craft and the problem.",
+  location: 'San Francisco, CA',
+  timezone: 'PST (UTC-8)',
+  availability: 'Available from March 2025',
+  email: 'alex@example.com',
+  github: 'https://github.com',
+  linkedin: 'https://linkedin.com',
+  twitter: 'https://twitter.com',
+  heroTagline: 'Available for work',
+  heroHeading: 'I craft digital experiences that matter',
+  heroSub: 'Full-stack developer & designer specialising in React, TypeScript, and beautiful interfaces. I turn complex problems into elegant, performant solutions.',
+  statYears: '6+',
+  statProjects: '40+',
+  statClients: '15+',
+};
+
+// ─── localStorage helpers ─────────────────────────────────────────────────────
+
+const KEYS = {
+  projects: 'portfolio_projects',
+  skills: 'portfolio_skills',
+  experiences: 'portfolio_experiences',
+  profile: 'portfolio_profile',
+  testimonials: 'portfolio_testimonials',
+};
+
+function load<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as T;
+  } catch {}
+  return fallback;
+}
+
+function save<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+export function getProjects(): Project[] {
+  return load(KEYS.projects, defaultProjects);
+}
+export function saveProjects(p: Project[]): void {
+  save(KEYS.projects, p);
+}
+
+export function getSkills(): Skill[] {
+  return load(KEYS.skills, defaultSkills);
+}
+export function saveSkills(s: Skill[]): void {
+  save(KEYS.skills, s);
+}
+
+export function getExperiences(): Experience[] {
+  return load(KEYS.experiences, defaultExperiences);
+}
+export function saveExperiences(e: Experience[]): void {
+  save(KEYS.experiences, e);
+}
+
+export type Profile = typeof defaultProfile;
+export function getProfile(): Profile {
+  return load(KEYS.profile, defaultProfile);
+}
+export function saveProfile(p: Profile): void {
+  save(KEYS.profile, p);
+}
+
+export type Testimonial = {
+  id: string;
+  quote: string;
+  name: string;
+  role: string;
+  company: string;
+  initials: string;
+  color: string;
+};
+
+const defaultTestimonials: Testimonial[] = [
+  {
+    id: 't1',
+    quote: "Alex is one of the most talented engineers I've worked with. Their attention to detail and ability to translate complex requirements into elegant code is remarkable.",
+    name: 'Sarah Chen',
+    role: 'VP of Engineering',
+    company: 'Vercel',
+    initials: 'SC',
+    color: '#6366f1',
+  },
+  {
+    id: 't2',
+    quote: 'Working with Alex transformed our product. They delivered not just what we asked for, but something far better — and on time. The UX improvements alone doubled our conversion rate.',
+    name: 'Marcus Williams',
+    role: 'CEO',
+    company: 'Luminary',
+    initials: 'MW',
+    color: '#f472b6',
+  },
+  {
+    id: 't3',
+    quote: "I've seen a lot of developers over the years, but Alex's combination of technical depth and design sensibility is genuinely rare. Would work with them again without hesitation.",
+    name: 'Priya Patel',
+    role: 'Product Lead',
+    company: 'Shopify',
+    initials: 'PP',
+    color: '#34d399',
+  },
+];
+
+export function getTestimonials(): Testimonial[] {
+  return load(KEYS.testimonials, defaultTestimonials);
+}
+export function saveTestimonials(t: Testimonial[]): void {
+  save(KEYS.testimonials, t);
+}
+
+// Legacy named exports so existing imports still compile
+export const projects = getProjects();
+export const skills = getSkills();
+export const experiences = getExperiences();

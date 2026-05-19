@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import SectionTitle from '@/components/ui/SectionTitle';
 import { Mail, MapPin, Clock, Github, Linkedin, Twitter, Send, CheckCircle } from 'lucide-react';
+import { usePortfolio } from '@/context/PortfolioContext';
 import styles from './ContactPage.module.css';
 
 type FormState = {
@@ -13,6 +14,7 @@ type FormState = {
 const initForm: FormState = { name: '', email: '', subject: '', message: '' };
 
 export default function ContactPage() {
+  const { profile } = usePortfolio();
   const [form, setForm] = useState<FormState>(initForm);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,21 +54,21 @@ export default function ContactPage() {
                   <div className={styles.infoIcon}><Mail size={18} /></div>
                   <div>
                     <div className={styles.infoLabel}>Email</div>
-                    <a href="mailto:alex@example.com" className={styles.infoValue}>alex@example.com</a>
+                    <a href={`mailto:${profile.email}`} className={styles.infoValue}>{profile.email}</a>
                   </div>
                 </div>
                 <div className={styles.infoItem}>
                   <div className={styles.infoIcon}><MapPin size={18} /></div>
                   <div>
                     <div className={styles.infoLabel}>Location</div>
-                    <span className={styles.infoValue}>San Francisco, CA</span>
+                    <span className={styles.infoValue}>{profile.location}</span>
                   </div>
                 </div>
                 <div className={styles.infoItem}>
                   <div className={styles.infoIcon}><Clock size={18} /></div>
                   <div>
                     <div className={styles.infoLabel}>Timezone</div>
-                    <span className={styles.infoValue}>PST (UTC-8)</span>
+                    <span className={styles.infoValue}>{profile.timezone}</span>
                   </div>
                 </div>
               </div>
@@ -75,15 +77,15 @@ export default function ContactPage() {
             <div className={styles.socialCard}>
               <h4 className={styles.socialTitle}>Find me online</h4>
               <div className={styles.socials}>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.socialBtn}>
+                <a href={profile.github} target="_blank" rel="noopener noreferrer" className={styles.socialBtn}>
                   <Github size={18} />
                   <span>GitHub</span>
                 </a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className={styles.socialBtn}>
+                <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className={styles.socialBtn}>
                   <Linkedin size={18} />
                   <span>LinkedIn</span>
                 </a>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className={styles.socialBtn}>
+                <a href={profile.twitter} target="_blank" rel="noopener noreferrer" className={styles.socialBtn}>
                   <Twitter size={18} />
                   <span>Twitter</span>
                 </a>

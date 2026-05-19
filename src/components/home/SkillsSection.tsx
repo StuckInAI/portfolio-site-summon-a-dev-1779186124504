@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import SectionTitle from '@/components/ui/SectionTitle';
-import { skills } from '@/lib/data';
+import { usePortfolio } from '@/context/PortfolioContext';
 import { cn } from '@/lib/utils';
 import styles from './SkillsSection.module.css';
 import type { Skill } from '@/types';
@@ -16,6 +16,7 @@ const categories: { label: string; value: Category }[] = [
 ];
 
 export default function SkillsSection() {
+  const { skills } = usePortfolio();
   const [active, setActive] = useState<Category>('all');
 
   const filtered = active === 'all' ? skills : skills.filter((s) => s.category === active);

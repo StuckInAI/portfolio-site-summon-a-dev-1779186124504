@@ -2,11 +2,12 @@ import { ArrowRight, ExternalLink, Github } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SectionTitle from '@/components/ui/SectionTitle';
 import Badge from '@/components/ui/Badge';
-import { projects } from '@/lib/data';
+import { usePortfolio } from '@/context/PortfolioContext';
 import { getProjectGradient, getProjectAccent } from '@/lib/utils';
 import styles from './FeaturedProjects.module.css';
 
 export default function FeaturedProjects() {
+  const { projects } = usePortfolio();
   const featured = projects.filter((p) => p.featured);
 
   return (
