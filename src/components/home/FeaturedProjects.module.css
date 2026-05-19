@@ -1,153 +1,107 @@
 .section {
-  padding: var(--space-24) 0;
-}
-
-.inner {
-  max-width: var(--max-width);
+  padding: 4rem 1.5rem;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 var(--space-6);
 }
 
 .header {
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: var(--space-12);
-  gap: var(--space-6);
-  flex-wrap: wrap;
-}
-
-.viewAll {
-  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-primary-light);
-  transition: gap var(--transition-fast);
-  flex-shrink: 0;
+  margin-bottom: 2rem;
 }
 
-.viewAll:hover {
-  gap: var(--space-3);
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f9fafb;
+  margin: 0;
 }
+
+.seeAll {
+  color: #6366f1;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.seeAll:hover { text-decoration: underline; }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
 .card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: #1f2937;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
   overflow: hidden;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-
 .card:hover {
-  border-color: var(--accent, var(--color-border-hover));
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
 }
 
-.card[data-large='true'] {
-  grid-column: span 2;
-}
-
-.cardImage {
-  position: relative;
-  height: 200px;
-  display: flex;
-  align-items: flex-end;
-  padding: var(--space-4);
-}
-
-.card[data-large='true'] .cardImage {
-  height: 260px;
-}
-
-.cardImageOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%);
-}
-
-.cardYear {
-  position: relative;
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 0.08em;
-}
-
-.cardLinks {
-  position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-  display: flex;
-  gap: var(--space-2);
-}
-
-.cardLink {
-  width: 32px;
-  height: 32px;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--radius-sm);
+.img {
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,0.8);
-  transition: all var(--transition-fast);
 }
 
-.cardLink:hover {
-  background: rgba(255,255,255,0.15);
-  color: #fff;
+.imgLabel {
+  font-size: 3rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.4);
 }
 
-.cardBody {
-  padding: var(--space-5) var(--space-5) var(--space-6);
+.body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .cardTitle {
-  font-size: 18px;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: var(--space-2);
-  letter-spacing: -0.02em;
+  color: #f9fafb;
+  margin: 0;
 }
 
 .cardDesc {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  line-height: 1.65;
-  margin-bottom: var(--space-4);
+  font-size: 0.9rem;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin: 0;
 }
 
-.cardTags {
+.tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 0.4rem;
 }
 
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .card[data-large='true'] {
-    grid-column: span 2;
-  }
+.tag {
+  background: rgba(99,102,241,0.12);
+  color: #818cf8;
+  border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
-@media (max-width: 600px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-  .card[data-large='true'] {
-    grid-column: span 1;
-  }
+.links {
+  display: flex;
+  gap: 1rem;
 }
+
+.link {
+  color: #6366f1;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.link:hover { text-decoration: underline; }

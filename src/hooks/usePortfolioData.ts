@@ -17,26 +17,34 @@ export function usePortfolioData() {
   const [profile, setProfileState] = useState<Profile>(defaultProfile);
   const [testimonials, setTestimonialsState] = useState<Testimonial[]>(defaultTestimonials);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load all data from Supabase on mount
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      const [p, s, e, pr, t] = await Promise.all([
-        fetchProjects(),
-        fetchSkills(),
-        fetchExperiences(),
-        fetchProfile(),
-        fetchTestimonials(),
-      ]);
-      if (!cancelled) {
-        setProjectsState(p);
-        setSkillsState(s);
-        setExperiencesState(e);
-        setProfileState(pr);
-        setTestimonialsState(t);
-        setLoading(false);
+      setError(null);
+      try {
+        const [p, s, e, pr, t] = await Promise.all([
+          fetchProjects(),
+          fetchSkills(),
+          fetchExperiences(),
+          fetchProfile(),
+          fetchTestimonials(),
+        ]);
+        if (!cancelled) {
+          setProjectsState(p);
+          setSkillsState(s);
+          setExperiencesState(e);
+          setProfileState(pr);
+          setTestimonialsState(t);
+        }
+      } catch (err) {
+        console.error('[usePortfolioData] load failed:', err);
+        if (!cancelled) setError('Failed to load portfolio data — using defaults.');
+        // defaults remain in state, nothing to do
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
     load();
@@ -46,9 +54,7 @@ export function usePortfolioData() {
   // Projects
   const setProjects = useCallback(async (p: Project[]) => {
     setProjectsState(p);
-    for (const project of p) {
-      await upsertProject(project);
-    }
+    for (const project of p) await upsertProject(project);
   }, []);
 
   const addProject = useCallback(async (project: Project) => {
@@ -75,9 +81,7 @@ export function usePortfolioData() {
   // Experiences
   const setExperiences = useCallback(async (e: Experience[]) => {
     setExperiencesState(e);
-    for (let i = 0; i < e.length; i++) {
-      await upsertExperience({ ...e[i], sort_order: i });
-    }
+    for (let i = 0; i < e.length; i++) await upsertExperience({ ...e[i], sort_order: i });
   }, []);
 
   const addExperience = useCallback(async (exp: Experience) => {
@@ -104,9 +108,7 @@ export function usePortfolioData() {
   // Testimonials
   const setTestimonials = useCallback(async (t: Testimonial[]) => {
     setTestimonialsState(t);
-    for (const testimonial of t) {
-      await upsertTestimonial(testimonial);
-    }
+    for (const testimonial of t) await upsertTestimonial(testimonial);
   }, []);
 
   const addTestimonial = useCallback(async (t: Testimonial) => {
@@ -126,6 +128,7 @@ export function usePortfolioData() {
 
   return {
     loading,
+    error,
     projects, setProjects, addProject, updateProject, removeProject,
     skills, setSkills,
     experiences, setExperiences, addExperience, updateExperience, removeExperience,

@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { usePortfolio } from '@/context/PortfolioContext';
-import type { Profile, Testimonial } from '@/context/PortfolioContext';
-import type { Project, Skill, Experience } from '@/types';
-import { Plus, Trash2, Save, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import styles from './AdminPage.module.css';
+import type { Project, Skill, Experience } from '@/types';
+import type { Testimonial, Profile } from '@/lib/data';
 
 type Tab = 'profile' | 'projects' | 'skills' | 'experiences' | 'testimonials';
 
@@ -11,73 +10,58 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('profile');
   const ctx = usePortfolio();
 
-  if (ctx.loading) {
-    return (
-      <div className={styles.loadingWrap}>
-        <Loader2 size={32} className={styles.loadingSpinner} />
-        <p>Loading data from Supabase...</p>
-      </div>
-    );
-  }
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'profile', label: 'Profile' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'experiences', label: 'Experience' },
+    { id: 'testimonials', label: 'Testimonials' },
+  ];
 
   return (
     <div className={styles.page}>
-      <div className={styles.inner}>
-        <div className={styles.header}>
-          <h1 className={styles.title}>Portfolio Admin</h1>
-          <p className={styles.subtitle}>Changes are saved directly to Supabase and reflect instantly across your portfolio.</p>
-        </div>
-
-        <div className={styles.tabs}>
-          {(['profile', 'projects', 'skills', 'experiences', 'testimonials'] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`${styles.tabBtn} ${tab === t ? styles.tabActive : ''}`}
-            >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.content}>
-          {tab === 'profile' && <ProfileEditor profile={ctx.profile} setProfile={ctx.setProfile} />}
-          {tab === 'projects' && <ProjectsEditor projects={ctx.projects} setProjects={ctx.setProjects} addProject={ctx.addProject} updateProject={ctx.updateProject} removeProject={ctx.removeProject} />}
-          {tab === 'skills' && <SkillsEditor skills={ctx.skills} setSkills={ctx.setSkills} />}
-          {tab === 'experiences' && <ExperiencesEditor experiences={ctx.experiences} setExperiences={ctx.setExperiences} addExperience={ctx.addExperience} updateExperience={ctx.updateExperience} removeExperience={ctx.removeExperience} />}
-          {tab === 'testimonials' && <TestimonialsEditor testimonials={ctx.testimonials} setTestimonials={ctx.setTestimonials} addTestimonial={ctx.addTestimonial} updateTestimonial={ctx.updateTestimonial} removeTestimonial={ctx.removeTestimonial} />}
-        </div>
+      <h1 className={styles.heading}>Admin Panel</h1>
+      <div className={styles.tabs}>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            className={tab === t.id ? `${styles.tab} ${styles.activeTab}` : styles.tab}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className={styles.content}>
+        {tab === 'profile' && <ProfileEditor profile={ctx.profile} onSave={ctx.setProfile} />}
+        {tab === 'projects' && <ProjectsEditor projects={ctx.projects} onAdd={ctx.addProject} onUpdate={ctx.updateProject} onRemove={ctx.removeProject} />}
+        {tab === 'skills' && <SkillsEditor skills={ctx.skills} onSave={ctx.setSkills} />}
+        {tab === 'experiences' && <ExperiencesEditor experiences={ctx.experiences} onAdd={ctx.addExperience} onUpdate={ctx.updateExperience} onRemove={ctx.removeExperience} />}
+        {tab === 'testimonials' && <TestimonialsEditor testimonials={ctx.testimonials} onAdd={ctx.addTestimonial} onUpdate={ctx.updateTestimonial} onRemove={ctx.removeTestimonial} />}
       </div>
     </div>
   );
 }
 
-// ─── Profile Editor ──────────────────────────────────────────────────────────
-
-function ProfileEditor({ profile, setProfile }: { profile: Profile; setProfile: (p: Profile) => Promise<void> }) {
-  const [local, setLocal] = useState<Profile>({ ...profile });
-  const [saving, setSaving] = useState(false);
+// ── Profile Editor ────────────────────────────────────────────────────────────
+function ProfileEditor({ profile, onSave }: { profile: Profile; onSave: (p: Profile) => Promise<void> }) {
+  const [form, setForm] = useState<Profile>(profile);
   const [saved, setSaved] = useState(false);
+  const set = (k: keyof Profile) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    setLocal((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setSaved(false);
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    await setProfile(local);
-    setSaving(false);
+  const handleSave = async () => {
+    await onSave(form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-  }
+  };
 
   const fields: { key: keyof Profile; label: string; multi?: boolean }[] = [
-    { key: 'name', label: 'Full Name' },
-    { key: 'initials', label: 'Initials (2 chars)' },
-    { key: 'title', label: 'Title / Tagline' },
-    { key: 'bio1', label: 'Bio Paragraph 1', multi: true },
-    { key: 'bio2', label: 'Bio Paragraph 2', multi: true },
+    { key: 'name', label: 'Name' },
+    { key: 'initials', label: 'Initials' },
+    { key: 'title', label: 'Title' },
+    { key: 'bio1', label: 'Bio paragraph 1', multi: true },
+    { key: 'bio2', label: 'Bio paragraph 2', multi: true },
     { key: 'location', label: 'Location' },
     { key: 'timezone', label: 'Timezone' },
     { key: 'availability', label: 'Availability' },
@@ -85,534 +69,245 @@ function ProfileEditor({ profile, setProfile }: { profile: Profile; setProfile: 
     { key: 'github', label: 'GitHub URL' },
     { key: 'linkedin', label: 'LinkedIn URL' },
     { key: 'twitter', label: 'Twitter URL' },
-    { key: 'heroTagline', label: 'Hero Tagline (badge)' },
-    { key: 'heroHeading', label: 'Hero Heading' },
-    { key: 'heroSub', label: 'Hero Sub-heading', multi: true },
-    { key: 'statYears', label: 'Stat: Years exp.' },
-    { key: 'statProjects', label: 'Stat: Projects shipped' },
-    { key: 'statClients', label: 'Stat: Happy clients' },
+    { key: 'heroTagline', label: 'Hero Tagline' },
+    { key: 'heroHeading', label: 'Hero Heading', multi: true },
+    { key: 'heroSub', label: 'Hero Subtitle', multi: true },
+    { key: 'statYears', label: 'Stat: Years' },
+    { key: 'statProjects', label: 'Stat: Projects' },
+    { key: 'statClients', label: 'Stat: Clients' },
   ];
 
   return (
-    <div className={styles.editorSection}>
-      <div className={styles.formGrid}>
-        {fields.map(({ key, label, multi }) => (
-          <div key={key} className={multi ? styles.formGroupFull : styles.formGroup}>
-            <label className={styles.label}>{label}</label>
-            {multi ? (
-              <textarea
-                name={key}
-                value={local[key]}
-                onChange={handleChange}
-                rows={3}
-                className={styles.textarea}
-              />
-            ) : (
-              <input
-                name={key}
-                type="text"
-                value={local[key]}
-                onChange={handleChange}
-                className={styles.input}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-      <button onClick={handleSave} disabled={saving} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
-        {saving ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
-        {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Profile'}
-      </button>
+    <div className={styles.editor}>
+      <h2 className={styles.editorTitle}>Edit Profile</h2>
+      {fields.map((f) => (
+        <div key={f.key} className={styles.field}>
+          <label className={styles.label}>{f.label}</label>
+          {f.multi
+            ? <textarea className={styles.textarea} rows={3} value={form[f.key]} onChange={set(f.key)} />
+            : <input className={styles.input} value={form[f.key]} onChange={set(f.key)} />}
+        </div>
+      ))}
+      <button className={styles.saveBtn} onClick={handleSave}>{saved ? 'Saved ✓' : 'Save Profile'}</button>
     </div>
   );
 }
 
-// ─── Projects Editor ─────────────────────────────────────────────────────────
-
+// ── Projects Editor ───────────────────────────────────────────────────────────
 function ProjectsEditor({
-  projects,
-  setProjects,
-  addProject,
-  updateProject,
-  removeProject,
+  projects, onAdd, onUpdate, onRemove
 }: {
   projects: Project[];
-  setProjects: (p: Project[]) => Promise<void>;
-  addProject: (p: Project) => Promise<void>;
-  updateProject: (p: Project) => Promise<void>;
-  removeProject: (id: string) => Promise<void>;
+  onAdd: (p: Project) => Promise<void>;
+  onUpdate: (p: Project) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
 }) {
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [local, setLocal] = useState<Project[]>(projects.map((p) => ({ ...p })));
-  const [saving, setSaving] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
-  const [removing, setRemoving] = useState<string | null>(null);
+  const empty: Project = { id: '', title: '', description: '', longDescription: '', tags: [], category: 'web', image: '', featured: false, year: new Date().getFullYear() };
+  const [form, setForm] = useState<Project>(empty);
+  const [editing, setEditing] = useState<string | null>(null);
 
-  function update(id: string, field: keyof Project, value: any) {
-    setLocal((prev) => prev.map((p) => p.id === id ? { ...p, [field]: value } : p));
-  }
+  const set = (k: keyof Project) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const val = k === 'tags' ? e.target.value.split(',').map((s) => s.trim()) : k === 'featured' ? (e.target as HTMLInputElement).checked : k === 'year' ? Number(e.target.value) : e.target.value;
+    setForm((f) => ({ ...f, [k]: val }));
+  };
 
-  function updateTags(id: string, raw: string) {
-    update(id, 'tags', raw.split(',').map((t) => t.trim()).filter(Boolean));
-  }
+  const startEdit = (p: Project) => { setForm(p); setEditing(p.id); };
+  const cancelEdit = () => { setForm(empty); setEditing(null); };
 
-  async function handleAddProject() {
-    const newP: Project = {
-      id: `p${Date.now()}`,
-      title: 'New Project',
-      description: '',
-      longDescription: '',
-      tags: [],
-      category: 'web',
-      image: 'lumina',
-      featured: false,
-      year: new Date().getFullYear(),
-    };
-    setLocal((prev) => [newP, ...prev]);
-    setExpanded(newP.id);
-    await addProject(newP);
-  }
-
-  async function handleRemoveProject(id: string) {
-    setRemoving(id);
-    await removeProject(id);
-    setLocal((prev) => prev.filter((p) => p.id !== id));
-    setRemoving(null);
-  }
-
-  async function handleSave(id: string) {
-    const project = local.find((p) => p.id === id);
-    if (!project) return;
-    setSaving(id);
-    await updateProject(project);
-    setSaving(null);
-    setSaved(id);
-    setTimeout(() => setSaved(null), 2000);
-  }
+  const handleSave = async () => {
+    const data = { ...form, id: form.id || crypto.randomUUID() };
+    if (editing) { await onUpdate(data); } else { await onAdd(data); }
+    setForm(empty);
+    setEditing(null);
+  };
 
   return (
-    <div className={styles.editorSection}>
-      <div className={styles.listHeader}>
-        <button onClick={handleAddProject} className={styles.addBtn}><Plus size={14} /> Add Project</button>
-      </div>
+    <div className={styles.editor}>
+      <h2 className={styles.editorTitle}>Projects</h2>
       <div className={styles.list}>
-        {local.map((p) => (
+        {projects.map((p) => (
           <div key={p.id} className={styles.listItem}>
-            <div className={styles.listItemHeader} onClick={() => setExpanded(expanded === p.id ? null : p.id)}>
-              <span className={styles.listItemTitle}>{p.title || 'Untitled'}</span>
-              <div className={styles.listItemActions}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleRemoveProject(p.id); }}
-                  className={styles.deleteBtn}
-                  disabled={removing === p.id}
-                >
-                  {removing === p.id ? <Loader2 size={14} className={styles.spinIcon} /> : <Trash2 size={14} />}
-                </button>
-                {expanded === p.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </div>
+            <span className={styles.listName}>{p.title}</span>
+            <div className={styles.listActions}>
+              <button className={styles.editBtn} onClick={() => startEdit(p)}>Edit</button>
+              <button className={styles.deleteBtn} onClick={() => onRemove(p.id)}>Delete</button>
             </div>
-            {expanded === p.id && (
-              <div className={styles.listItemBody}>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Title</label>
-                    <input className={styles.input} value={p.title} onChange={(e) => update(p.id, 'title', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Year</label>
-                    <input className={styles.input} type="number" value={p.year} onChange={(e) => update(p.id, 'year', Number(e.target.value))} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Category</label>
-                    <select className={styles.select} value={p.category} onChange={(e) => update(p.id, 'category', e.target.value)}>
-                      <option value="web">Web</option>
-                      <option value="mobile">Mobile</option>
-                      <option value="design">Design</option>
-                      <option value="oss">Open Source</option>
-                    </select>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Image key</label>
-                    <select className={styles.select} value={p.image} onChange={(e) => update(p.id, 'image', e.target.value)}>
-                      {['lumina','flowstate','aurora','horizon','sonic','devpulse'].map((img) => (
-                        <option key={img} value={img}>{img}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Live URL</label>
-                    <input className={styles.input} value={p.liveUrl || ''} onChange={(e) => update(p.id, 'liveUrl', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>GitHub URL</label>
-                    <input className={styles.input} value={p.githubUrl || ''} onChange={(e) => update(p.id, 'githubUrl', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>Tags (comma-separated)</label>
-                    <input className={styles.input} value={p.tags.join(', ')} onChange={(e) => updateTags(p.id, e.target.value)} />
-                  </div>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>Short Description</label>
-                    <textarea className={styles.textarea} rows={2} value={p.description} onChange={(e) => update(p.id, 'description', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>Long Description</label>
-                    <textarea className={styles.textarea} rows={4} value={p.longDescription} onChange={(e) => update(p.id, 'longDescription', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>
-                      <input type="checkbox" checked={p.featured} onChange={(e) => update(p.id, 'featured', e.target.checked)} />
-                      {' '}Featured project
-                    </label>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleSave(p.id)}
-                  disabled={saving === p.id}
-                  className={`${styles.saveBtn} ${saved === p.id ? styles.savedBtn : ''}`}
-                >
-                  {saving === p.id ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
-                  {saving === p.id ? 'Saving...' : saved === p.id ? 'Saved!' : 'Save Project'}
-                </button>
-              </div>
-            )}
           </div>
         ))}
+      </div>
+      <h3 className={styles.subTitle}>{editing ? 'Edit Project' : 'Add Project'}</h3>
+      <div className={styles.field}><label className={styles.label}>Title</label><input className={styles.input} value={form.title} onChange={set('title')} /></div>
+      <div className={styles.field}><label className={styles.label}>Description</label><textarea className={styles.textarea} rows={2} value={form.description} onChange={set('description')} /></div>
+      <div className={styles.field}><label className={styles.label}>Long Description</label><textarea className={styles.textarea} rows={3} value={form.longDescription} onChange={set('longDescription')} /></div>
+      <div className={styles.field}><label className={styles.label}>Tags (comma-separated)</label><input className={styles.input} value={form.tags.join(', ')} onChange={set('tags')} /></div>
+      <div className={styles.field}><label className={styles.label}>Category</label>
+        <select className={styles.input} value={form.category} onChange={set('category')}>
+          <option value="web">Web</option>
+          <option value="mobile">Mobile</option>
+          <option value="design">Design</option>
+          <option value="oss">OSS</option>
+        </select>
+      </div>
+      <div className={styles.field}><label className={styles.label}>Image key (e.g. lumina)</label><input className={styles.input} value={form.image} onChange={set('image')} /></div>
+      <div className={styles.field}><label className={styles.label}>Live URL</label><input className={styles.input} value={form.liveUrl ?? ''} onChange={set('liveUrl')} /></div>
+      <div className={styles.field}><label className={styles.label}>GitHub URL</label><input className={styles.input} value={form.githubUrl ?? ''} onChange={set('githubUrl')} /></div>
+      <div className={styles.field}><label className={styles.label}>Year</label><input className={styles.input} type="number" value={form.year} onChange={set('year')} /></div>
+      <div className={styles.field}><label className={styles.label}><input type="checkbox" checked={form.featured} onChange={set('featured')} /> Featured</label></div>
+      <div className={styles.formActions}>
+        <button className={styles.saveBtn} onClick={handleSave}>{editing ? 'Update' : 'Add Project'}</button>
+        {editing && <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>}
       </div>
     </div>
   );
 }
 
-// ─── Skills Editor ───────────────────────────────────────────────────────────
-
-function SkillsEditor({ skills, setSkills }: { skills: Skill[]; setSkills: (s: Skill[]) => Promise<void> }) {
-  const [local, setLocal] = useState<Skill[]>(skills.map((s) => ({ ...s })));
-  const [saving, setSaving] = useState(false);
+// ── Skills Editor ─────────────────────────────────────────────────────────────
+function SkillsEditor({ skills, onSave }: { skills: Skill[]; onSave: (s: Skill[]) => Promise<void> }) {
+  const [list, setList] = useState<Skill[]>(skills);
   const [saved, setSaved] = useState(false);
 
-  function update(index: number, field: keyof Skill, value: any) {
-    setLocal((prev) => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
-    setSaved(false);
-  }
+  const update = (i: number, k: keyof Skill) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const val = k === 'level' ? Number(e.target.value) : e.target.value;
+    setList((prev) => prev.map((s, idx) => idx === i ? { ...s, [k]: val } : s));
+  };
 
-  function addSkill() {
-    setLocal((prev) => [...prev, { name: 'New Skill', level: 50, category: 'frontend' }]);
-    setSaved(false);
-  }
+  const addSkill = () => setList((prev) => [...prev, { name: '', level: 80, category: 'frontend' }]);
+  const removeSkill = (i: number) => setList((prev) => prev.filter((_, idx) => idx !== i));
 
-  function removeSkill(index: number) {
-    setLocal((prev) => prev.filter((_, i) => i !== index));
-    setSaved(false);
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    await setSkills(local);
-    setSaving(false);
+  const handleSave = async () => {
+    await onSave(list);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-  }
+  };
 
   return (
-    <div className={styles.editorSection}>
-      <div className={styles.listHeader}>
-        <button onClick={addSkill} className={styles.addBtn}><Plus size={14} /> Add Skill</button>
-        <button onClick={handleSave} disabled={saving} className={`${styles.saveBtn} ${saved ? styles.savedBtn : ''}`}>
-          {saving ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
-          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save All'}
-        </button>
-      </div>
-      <div className={styles.skillRows}>
-        {local.map((s, i) => (
-          <div key={i} className={styles.skillRow}>
-            <input
-              className={styles.input}
-              value={s.name}
-              onChange={(e) => update(i, 'name', e.target.value)}
-              placeholder="Skill name"
-            />
-            <select
-              className={styles.select}
-              value={s.category}
-              onChange={(e) => update(i, 'category', e.target.value)}
-            >
-              <option value="frontend">Frontend</option>
-              <option value="backend">Backend</option>
-              <option value="tools">Tools</option>
-              <option value="design">Design</option>
-            </select>
-            <div className={styles.levelWrap}>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={s.level}
-                onChange={(e) => update(i, 'level', Number(e.target.value))}
-                className={styles.range}
-              />
-              <span className={styles.levelNum}>{s.level}%</span>
-            </div>
-            <button onClick={() => removeSkill(i)} className={styles.deleteBtn}><Trash2 size={14} /></button>
-          </div>
-        ))}
-      </div>
+    <div className={styles.editor}>
+      <h2 className={styles.editorTitle}>Skills</h2>
+      {list.map((s, i) => (
+        <div key={i} className={styles.skillRow}>
+          <input className={styles.input} placeholder="Name" value={s.name} onChange={update(i, 'name')} />
+          <input className={styles.input} type="number" min={0} max={100} value={s.level} onChange={update(i, 'level')} style={{ width: 80 }} />
+          <select className={styles.input} value={s.category} onChange={update(i, 'category')}>
+            <option value="frontend">Frontend</option>
+            <option value="backend">Backend</option>
+            <option value="tools">Tools</option>
+            <option value="design">Design</option>
+          </select>
+          <button className={styles.deleteBtn} onClick={() => removeSkill(i)}>✕</button>
+        </div>
+      ))}
+      <button className={styles.addBtn} onClick={addSkill}>+ Add Skill</button>
+      <button className={styles.saveBtn} onClick={handleSave}>{saved ? 'Saved ✓' : 'Save Skills'}</button>
     </div>
   );
 }
 
-// ─── Experiences Editor ──────────────────────────────────────────────────────
-
+// ── Experiences Editor ────────────────────────────────────────────────────────
 function ExperiencesEditor({
-  experiences,
-  setExperiences,
-  addExperience,
-  updateExperience,
-  removeExperience,
+  experiences, onAdd, onUpdate, onRemove
 }: {
   experiences: Experience[];
-  setExperiences: (e: Experience[]) => Promise<void>;
-  addExperience: (e: Experience) => Promise<void>;
-  updateExperience: (e: Experience) => Promise<void>;
-  removeExperience: (id: string) => Promise<void>;
+  onAdd: (e: Experience) => Promise<void>;
+  onUpdate: (e: Experience) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
 }) {
-  const [local, setLocal] = useState<Experience[]>(experiences.map((e) => ({ ...e, description: [...e.description], tech: [...e.tech] })));
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [saving, setSaving] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
-  const [removing, setRemoving] = useState<string | null>(null);
+  const empty: Experience = { id: '', company: '', role: '', period: '', description: [], tech: [] };
+  const [form, setForm] = useState<Experience>(empty);
+  const [editing, setEditing] = useState<string | null>(null);
 
-  function update(id: string, field: keyof Experience, value: any) {
-    setLocal((prev) => prev.map((e) => e.id === id ? { ...e, [field]: value } : e));
-  }
+  const set = (k: keyof Experience) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const val = (k === 'description' || k === 'tech') ? e.target.value.split('\n').map(s => s.trim()).filter(Boolean) : e.target.value;
+    setForm((f) => ({ ...f, [k]: val }));
+  };
 
-  async function handleAdd() {
-    const newE: Experience = {
-      id: `e${Date.now()}`,
-      company: 'Company',
-      role: 'Role',
-      period: '2024 — Present',
-      description: ['Describe what you did here.'],
-      tech: [],
-    };
-    setLocal((prev) => [newE, ...prev]);
-    setExpanded(newE.id);
-    await addExperience(newE);
-  }
+  const startEdit = (exp: Experience) => { setForm(exp); setEditing(exp.id); };
+  const cancelEdit = () => { setForm(empty); setEditing(null); };
 
-  async function handleRemove(id: string) {
-    setRemoving(id);
-    await removeExperience(id);
-    setLocal((prev) => prev.filter((e) => e.id !== id));
-    setRemoving(null);
-  }
-
-  async function handleSave(id: string) {
-    const exp = local.find((e) => e.id === id);
-    if (!exp) return;
-    setSaving(id);
-    await updateExperience(exp);
-    setSaving(null);
-    setSaved(id);
-    setTimeout(() => setSaved(null), 2000);
-  }
+  const handleSave = async () => {
+    const data = { ...form, id: form.id || crypto.randomUUID() };
+    if (editing) { await onUpdate(data); } else { await onAdd(data); }
+    setForm(empty);
+    setEditing(null);
+  };
 
   return (
-    <div className={styles.editorSection}>
-      <div className={styles.listHeader}>
-        <button onClick={handleAdd} className={styles.addBtn}><Plus size={14} /> Add Experience</button>
-      </div>
+    <div className={styles.editor}>
+      <h2 className={styles.editorTitle}>Experience</h2>
       <div className={styles.list}>
-        {local.map((exp) => (
+        {experiences.map((exp) => (
           <div key={exp.id} className={styles.listItem}>
-            <div className={styles.listItemHeader} onClick={() => setExpanded(expanded === exp.id ? null : exp.id)}>
-              <span className={styles.listItemTitle}>{exp.role} @ {exp.company}</span>
-              <div className={styles.listItemActions}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleRemove(exp.id); }}
-                  className={styles.deleteBtn}
-                  disabled={removing === exp.id}
-                >
-                  {removing === exp.id ? <Loader2 size={14} className={styles.spinIcon} /> : <Trash2 size={14} />}
-                </button>
-                {expanded === exp.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </div>
+            <span className={styles.listName}>{exp.role} @ {exp.company}</span>
+            <div className={styles.listActions}>
+              <button className={styles.editBtn} onClick={() => startEdit(exp)}>Edit</button>
+              <button className={styles.deleteBtn} onClick={() => onRemove(exp.id)}>Delete</button>
             </div>
-            {expanded === exp.id && (
-              <div className={styles.listItemBody}>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Company</label>
-                    <input className={styles.input} value={exp.company} onChange={(e) => update(exp.id, 'company', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Role</label>
-                    <input className={styles.input} value={exp.role} onChange={(e) => update(exp.id, 'role', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Period</label>
-                    <input className={styles.input} value={exp.period} onChange={(e) => update(exp.id, 'period', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Tech (comma-separated)</label>
-                    <input className={styles.input} value={exp.tech.join(', ')} onChange={(e) => update(exp.id, 'tech', e.target.value.split(',').map((t) => t.trim()).filter(Boolean))} />
-                  </div>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>Description (one bullet per line)</label>
-                    <textarea
-                      className={styles.textarea}
-                      rows={5}
-                      value={exp.description.join('\n')}
-                      onChange={(e) => update(exp.id, 'description', e.target.value.split('\n').filter(Boolean))}
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleSave(exp.id)}
-                  disabled={saving === exp.id}
-                  className={`${styles.saveBtn} ${saved === exp.id ? styles.savedBtn : ''}`}
-                >
-                  {saving === exp.id ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
-                  {saving === exp.id ? 'Saving...' : saved === exp.id ? 'Saved!' : 'Save Experience'}
-                </button>
-              </div>
-            )}
           </div>
         ))}
+      </div>
+      <h3 className={styles.subTitle}>{editing ? 'Edit' : 'Add'} Experience</h3>
+      <div className={styles.field}><label className={styles.label}>Company</label><input className={styles.input} value={form.company} onChange={set('company')} /></div>
+      <div className={styles.field}><label className={styles.label}>Role</label><input className={styles.input} value={form.role} onChange={set('role')} /></div>
+      <div className={styles.field}><label className={styles.label}>Period</label><input className={styles.input} value={form.period} onChange={set('period')} /></div>
+      <div className={styles.field}><label className={styles.label}>Description (one per line)</label><textarea className={styles.textarea} rows={4} value={form.description.join('\n')} onChange={set('description')} /></div>
+      <div className={styles.field}><label className={styles.label}>Tech (one per line)</label><textarea className={styles.textarea} rows={3} value={form.tech.join('\n')} onChange={set('tech')} /></div>
+      <div className={styles.formActions}>
+        <button className={styles.saveBtn} onClick={handleSave}>{editing ? 'Update' : 'Add'}</button>
+        {editing && <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>}
       </div>
     </div>
   );
 }
 
-// ─── Testimonials Editor ─────────────────────────────────────────────────────
-
+// ── Testimonials Editor ───────────────────────────────────────────────────────
 function TestimonialsEditor({
-  testimonials,
-  setTestimonials,
-  addTestimonial,
-  updateTestimonial,
-  removeTestimonial,
+  testimonials, onAdd, onUpdate, onRemove
 }: {
   testimonials: Testimonial[];
-  setTestimonials: (t: Testimonial[]) => Promise<void>;
-  addTestimonial: (t: Testimonial) => Promise<void>;
-  updateTestimonial: (t: Testimonial) => Promise<void>;
-  removeTestimonial: (id: string) => Promise<void>;
+  onAdd: (t: Testimonial) => Promise<void>;
+  onUpdate: (t: Testimonial) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
 }) {
-  const [local, setLocal] = useState<Testimonial[]>(testimonials.map((t) => ({ ...t })));
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [saving, setSaving] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
-  const [removing, setRemoving] = useState<string | null>(null);
+  const empty: Testimonial = { id: '', quote: '', name: '', role: '', company: '', initials: '', color: '#6366f1' };
+  const [form, setForm] = useState<Testimonial>(empty);
+  const [editing, setEditing] = useState<string | null>(null);
 
-  function update(id: string, field: keyof Testimonial, value: any) {
-    setLocal((prev) => prev.map((t) => t.id === id ? { ...t, [field]: value } : t));
-  }
+  const set = (k: keyof Testimonial) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  async function handleAdd() {
-    const newT: Testimonial = {
-      id: `t${Date.now()}`,
-      quote: 'A wonderful testimonial.',
-      name: 'Person Name',
-      role: 'Role',
-      company: 'Company',
-      initials: 'PN',
-      color: '#6366f1',
-    };
-    setLocal((prev) => [...prev, newT]);
-    setExpanded(newT.id);
-    await addTestimonial(newT);
-  }
+  const startEdit = (t: Testimonial) => { setForm(t); setEditing(t.id); };
+  const cancelEdit = () => { setForm(empty); setEditing(null); };
 
-  async function handleRemove(id: string) {
-    setRemoving(id);
-    await removeTestimonial(id);
-    setLocal((prev) => prev.filter((t) => t.id !== id));
-    setRemoving(null);
-  }
-
-  async function handleSave(id: string) {
-    const t = local.find((x) => x.id === id);
-    if (!t) return;
-    setSaving(id);
-    await updateTestimonial(t);
-    setSaving(null);
-    setSaved(id);
-    setTimeout(() => setSaved(null), 2000);
-  }
-
-  const colorOptions = ['#6366f1', '#f472b6', '#34d399', '#f59e0b', '#60a5fa', '#a78bfa', '#fb923c'];
+  const handleSave = async () => {
+    const data = { ...form, id: form.id || crypto.randomUUID() };
+    if (editing) { await onUpdate(data); } else { await onAdd(data); }
+    setForm(empty);
+    setEditing(null);
+  };
 
   return (
-    <div className={styles.editorSection}>
-      <div className={styles.listHeader}>
-        <button onClick={handleAdd} className={styles.addBtn}><Plus size={14} /> Add Testimonial</button>
-      </div>
+    <div className={styles.editor}>
+      <h2 className={styles.editorTitle}>Testimonials</h2>
       <div className={styles.list}>
-        {local.map((t) => (
+        {testimonials.map((t) => (
           <div key={t.id} className={styles.listItem}>
-            <div className={styles.listItemHeader} onClick={() => setExpanded(expanded === t.id ? null : t.id)}>
-              <span className={styles.listItemTitle}>{t.name} @ {t.company}</span>
-              <div className={styles.listItemActions}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleRemove(t.id); }}
-                  className={styles.deleteBtn}
-                  disabled={removing === t.id}
-                >
-                  {removing === t.id ? <Loader2 size={14} className={styles.spinIcon} /> : <Trash2 size={14} />}
-                </button>
-                {expanded === t.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </div>
+            <span className={styles.listName}>{t.name} — {t.company}</span>
+            <div className={styles.listActions}>
+              <button className={styles.editBtn} onClick={() => startEdit(t)}>Edit</button>
+              <button className={styles.deleteBtn} onClick={() => onRemove(t.id)}>Delete</button>
             </div>
-            {expanded === t.id && (
-              <div className={styles.listItemBody}>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Name</label>
-                    <input className={styles.input} value={t.name} onChange={(e) => update(t.id, 'name', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Initials</label>
-                    <input className={styles.input} value={t.initials} maxLength={3} onChange={(e) => update(t.id, 'initials', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Role</label>
-                    <input className={styles.input} value={t.role} onChange={(e) => update(t.id, 'role', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Company</label>
-                    <input className={styles.input} value={t.company} onChange={(e) => update(t.id, 'company', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>Quote</label>
-                    <textarea className={styles.textarea} rows={3} value={t.quote} onChange={(e) => update(t.id, 'quote', e.target.value)} />
-                  </div>
-                  <div className={styles.formGroupFull}>
-                    <label className={styles.label}>Avatar Color</label>
-                    <div className={styles.colorPicker}>
-                      {colorOptions.map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => update(t.id, 'color', c)}
-                          className={`${styles.colorSwatch} ${t.color === c ? styles.colorSwatchActive : ''}`}
-                          style={{ background: c }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleSave(t.id)}
-                  disabled={saving === t.id}
-                  className={`${styles.saveBtn} ${saved === t.id ? styles.savedBtn : ''}`}
-                >
-                  {saving === t.id ? <Loader2 size={15} className={styles.spinIcon} /> : <Save size={15} />}
-                  {saving === t.id ? 'Saving...' : saved === t.id ? 'Saved!' : 'Save Testimonial'}
-                </button>
-              </div>
-            )}
           </div>
         ))}
+      </div>
+      <h3 className={styles.subTitle}>{editing ? 'Edit' : 'Add'} Testimonial</h3>
+      <div className={styles.field}><label className={styles.label}>Quote</label><textarea className={styles.textarea} rows={3} value={form.quote} onChange={set('quote')} /></div>
+      <div className={styles.field}><label className={styles.label}>Name</label><input className={styles.input} value={form.name} onChange={set('name')} /></div>
+      <div className={styles.field}><label className={styles.label}>Role</label><input className={styles.input} value={form.role} onChange={set('role')} /></div>
+      <div className={styles.field}><label className={styles.label}>Company</label><input className={styles.input} value={form.company} onChange={set('company')} /></div>
+      <div className={styles.field}><label className={styles.label}>Initials</label><input className={styles.input} value={form.initials} onChange={set('initials')} /></div>
+      <div className={styles.field}><label className={styles.label}>Color (hex)</label><input className={styles.input} value={form.color} onChange={set('color')} /></div>
+      <div className={styles.formActions}>
+        <button className={styles.saveBtn} onClick={handleSave}>{editing ? 'Update' : 'Add'}</button>
+        {editing && <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>}
       </div>
     </div>
   );

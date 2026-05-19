@@ -1,122 +1,62 @@
 import { usePortfolio } from '@/context/PortfolioContext';
-import SectionTitle from '@/components/ui/SectionTitle';
-import Badge from '@/components/ui/Badge';
-import { MapPin, Calendar, ExternalLink } from 'lucide-react';
+import { defaultProfile, defaultExperiences } from '@/lib/data';
 import styles from './AboutPage.module.css';
 
 export default function AboutPage() {
-  const { skills, experiences, profile } = usePortfolio();
-  const frontendSkills = skills.filter((s) => s.category === 'frontend');
-  const otherSkills = skills.filter((s) => s.category !== 'frontend');
+  let profile = defaultProfile;
+  let experiences = defaultExperiences;
+  try {
+    const ctx = usePortfolio();
+    profile = ctx.profile;
+    experiences = ctx.experiences;
+  } catch { /* outside provider */ }
 
   return (
     <div className={styles.page}>
-      <div className={styles.inner}>
+      <div className={styles.hero}>
+        <div className={styles.avatar}>{profile.initials}</div>
+        <h1 className={styles.name}>{profile.name}</h1>
+        <p className={styles.title}>{profile.title}</p>
+      </div>
 
-        {/* Hero */}
-        <div className={styles.hero}>
-          <div className={styles.heroText}>
-            <SectionTitle
-              label="About me"
-              title={`Hey, I'm ${profile.name} 👋`}
-            />
-            <p className={styles.bio}>{profile.bio1}</p>
-            <p className={styles.bio}>{profile.bio2}</p>
-            <div className={styles.heroMeta}>
-              <span className={styles.metaItem}>
-                <MapPin size={14} />
-                {profile.location}
-              </span>
-              <span className={styles.metaItem}>
-                <Calendar size={14} />
-                {profile.availability}
-              </span>
-            </div>
-          </div>
-          <div className={styles.heroVisual}>
-            <div className={styles.avatarWrap}>
-              <div className={styles.avatar}>
-                <span className={styles.avatarInitials}>{profile.initials}</span>
-              </div>
-              <div className={styles.avatarRing} />
-              <div className={styles.avatarRing2} />
-            </div>
-          </div>
-        </div>
+      <div className={styles.content}>
+        <section className={styles.bio}>
+          <p>{profile.bio1}</p>
+          <p>{profile.bio2}</p>
+        </section>
 
-        {/* Experience */}
-        <div className={styles.section}>
-          <SectionTitle label="Experience" title="Where I've worked" />
+        <section>
+          <h2 className={styles.sectionTitle}>Experience</h2>
           <div className={styles.timeline}>
-            {experiences.map((exp, i) => (
-              <div key={exp.id} className={styles.timelineItem}>
-                <div className={styles.timelineDot} data-first={i === 0 ? 'true' : 'false'} />
-                <div className={styles.timelineCard}>
-                  <div className={styles.expHeader}>
-                    <div>
-                      <h3 className={styles.expRole}>{exp.role}</h3>
-                      <div className={styles.expCompany}>
-                        <span>{exp.company}</span>
-                        <ExternalLink size={12} />
-                      </div>
-                    </div>
-                    <span className={styles.expPeriod}>{exp.period}</span>
+            {experiences.map((exp) => (
+              <div key={exp.id} className={styles.expCard}>
+                <div className={styles.expHeader}>
+                  <div>
+                    <h3 className={styles.expRole}>{exp.role}</h3>
+                    <div className={styles.expCompany}>{exp.company}</div>
                   </div>
-                  <ul className={styles.expList}>
-                    {exp.description.map((desc, j) => (
-                      <li key={j} className={styles.expListItem}>{desc}</li>
-                    ))}
-                  </ul>
-                  <div className={styles.expTech}>
-                    {exp.tech.map((t) => (
-                      <Badge key={t}>{t}</Badge>
-                    ))}
-                  </div>
+                  <span className={styles.expPeriod}>{exp.period}</span>
+                </div>
+                <ul className={styles.expDesc}>
+                  {exp.description.map((d, i) => <li key={i}>{d}</li>)}
+                </ul>
+                <div className={styles.tags}>
+                  {exp.tech.map((t) => <span key={t} className={styles.tag}>{t}</span>)}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Skills */}
-        <div className={styles.section}>
-          <SectionTitle label="Skills" title="What I bring to the table" />
-          <div className={styles.skillsGrid}>
-            <div className={styles.skillGroup}>
-              <h4 className={styles.skillGroupTitle}>Frontend</h4>
-              <div className={styles.skillBadges}>
-                {frontendSkills.map((s) => (
-                  <div key={s.name} className={styles.skillItem}>
-                    <span className={styles.skillName}>{s.name}</span>
-                    <div className={styles.skillBar}>
-                      <div
-                        className={styles.skillBarFill}
-                        style={{ '--w': `${s.level}%` } as React.CSSProperties}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className={styles.skillGroup}>
-              <h4 className={styles.skillGroupTitle}>Backend, Tools & Design</h4>
-              <div className={styles.skillBadges}>
-                {otherSkills.map((s) => (
-                  <div key={s.name} className={styles.skillItem}>
-                    <span className={styles.skillName}>{s.name}</span>
-                    <div className={styles.skillBar}>
-                      <div
-                        className={styles.skillBarFill}
-                        style={{ '--w': `${s.level}%` } as React.CSSProperties}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <section>
+          <h2 className={styles.sectionTitle}>Details</h2>
+          <div className={styles.details}>
+            <div className={styles.detail}><span>📍</span> {profile.location}</div>
+            <div className={styles.detail}><span>🕐</span> {profile.timezone}</div>
+            <div className={styles.detail}><span>✅</span> {profile.availability}</div>
+            <div className={styles.detail}><span>📧</span> {profile.email}</div>
           </div>
-        </div>
-
+        </section>
       </div>
     </div>
   );

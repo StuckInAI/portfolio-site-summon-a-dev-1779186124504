@@ -1,95 +1,49 @@
-import { useState } from 'react';
-import SectionTitle from '@/components/ui/SectionTitle';
-import Badge from '@/components/ui/Badge';
 import { usePortfolio } from '@/context/PortfolioContext';
-import { getProjectGradient, getProjectAccent } from '@/lib/utils';
-import { ExternalLink, Github } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { Project } from '@/types';
+import { defaultProjects } from '@/lib/data';
 import styles from './ProjectsPage.module.css';
 
-type Filter = 'all' | Project['category'];
-
-const filters: { label: string; value: Filter }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Web', value: 'web' },
-  { label: 'Mobile', value: 'mobile' },
-  { label: 'Design', value: 'design' },
-  { label: 'Open Source', value: 'oss' },
-];
+const GRAD: Record<string, string> = {
+  lumina: 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)',
+  flowstate: 'linear-gradient(135deg,#ec4899 0%,#f97316 100%)',
+  aurora: 'linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%)',
+};
 
 export default function ProjectsPage() {
-  const { projects } = usePortfolio();
-  const [active, setActive] = useState<Filter>('all');
-  const filtered = active === 'all' ? projects : projects.filter((p) => p.category === active);
+  let projects = defaultProjects;
+  try {
+    const ctx = usePortfolio();
+    projects = ctx.projects;
+  } catch { /* outside provider */ }
 
   return (
     <div className={styles.page}>
-      <div className={styles.inner}>
-        <div className={styles.titleWrap}>
-          <SectionTitle
-            label="Portfolio"
-            title="All projects"
-            subtitle="Everything I've shipped — web apps, mobile apps, design systems, and open-source."
-            align="center"
-          />
-        </div>
-
-        <div className={styles.filters}>
-          {filters.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setActive(f.value)}
-              className={cn(styles.filterBtn, active === f.value && styles.filterActive)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.grid}>
-          {filtered.map((project) => (
-            <div
-              key={project.id}
-              className={styles.card}
-              style={{ '--accent': getProjectAccent(project.image) } as React.CSSProperties}
-            >
-              <div
-                className={styles.cardImage}
-                style={{ background: getProjectGradient(project.image) }}
-              >
-                <div className={styles.cardOverlay} />
-                <div className={styles.cardTopRow}>
-                  <span className={styles.cardYear}>{project.year}</span>
-                  <div className={styles.cardLinks}>
-                    {project.liveUrl && (
-                      <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className={styles.cardLink}>
-                        <ExternalLink size={15} />
-                      </a>
-                    )}
-                    {project.githubUrl && (
-                      <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className={styles.cardLink}>
-                        <Github size={15} />
-                      </a>
-                    )}
-                  </div>
-                </div>
+      <div className={styles.hero}>
+        <h1 className={styles.heading}>All Projects</h1>
+        <p className={styles.sub}>A collection of things I've built — from open-source tools to client products.</p>
+      </div>
+      <div className={styles.grid}>
+        {projects.map((p) => (
+          <div key={p.id} className={styles.card}>
+            <div className={styles.img} style={{ background: GRAD[p.image] ?? 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+              <span className={styles.imgLabel}>{p.title[0]}</span>
+            </div>
+            <div className={styles.body}>
+              <div className={styles.meta}>
+                <span className={styles.category}>{p.category}</span>
+                <span className={styles.year}>{p.year}</span>
               </div>
-              <div className={styles.cardBody}>
-                <div className={styles.cardMeta}>
-                  <Badge variant="primary">{project.category === 'oss' ? 'Open Source' : project.category.charAt(0).toUpperCase() + project.category.slice(1)}</Badge>
-                </div>
-                <h3 className={styles.cardTitle}>{project.title}</h3>
-                <p className={styles.cardDesc}>{project.description}</p>
-                <div className={styles.cardTags}>
-                  {project.tags.map((tag) => (
-                    <Badge key={tag}>{tag}</Badge>
-                  ))}
-                </div>
+              <h2 className={styles.cardTitle}>{p.title}</h2>
+              <p className={styles.cardDesc}>{p.description}</p>
+              <div className={styles.tags}>
+                {p.tags.map((t) => <span key={t} className={styles.tag}>{t}</span>)}
+              </div>
+              <div className={styles.links}>
+                {p.liveUrl && <a href={p.liveUrl} target="_blank" rel="noreferrer" className={styles.link}>Live ↗</a>}
+                {p.githubUrl && <a href={p.githubUrl} target="_blank" rel="noreferrer" className={styles.link}>GitHub ↗</a>}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

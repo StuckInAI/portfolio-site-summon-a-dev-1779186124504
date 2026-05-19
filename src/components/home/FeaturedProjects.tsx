@@ -1,68 +1,47 @@
-import { ArrowRight, ExternalLink, Github } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import SectionTitle from '@/components/ui/SectionTitle';
-import Badge from '@/components/ui/Badge';
 import { usePortfolio } from '@/context/PortfolioContext';
-import { getProjectGradient, getProjectAccent } from '@/lib/utils';
+import { defaultProjects } from '@/lib/data';
 import styles from './FeaturedProjects.module.css';
 
+const GRAD: Record<string, string> = {
+  lumina: 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)',
+  flowstate: 'linear-gradient(135deg,#ec4899 0%,#f97316 100%)',
+  aurora: 'linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%)',
+};
+
 export default function FeaturedProjects() {
-  const { projects } = usePortfolio();
-  const featured = projects.filter((p) => p.featured);
+  let featured = defaultProjects.filter((p) => p.featured);
+  try {
+    const ctx = usePortfolio();
+    featured = ctx.projects.filter((p) => p.featured);
+  } catch { /* outside provider */ }
 
   return (
     <section className={styles.section}>
-      <div className={styles.inner}>
-        <div className={styles.header}>
-          <SectionTitle
-            label="Selected Work"
-            title="Projects I'm proud of"
-            subtitle="A handful of the things I've built — from design systems to full-stack products."
-          />
-          <Link to="/projects" className={styles.viewAll}>
-            View all projects <ArrowRight size={14} />
-          </Link>
-        </div>
-
-        <div className={styles.grid}>
-          {featured.map((project, i) => (
-            <div
-              key={project.id}
-              className={styles.card}
-              style={{ '--accent': getProjectAccent(project.image) } as React.CSSProperties}
-              data-large={i === 0 ? 'true' : 'false'}
-            >
-              <div
-                className={styles.cardImage}
-                style={{ background: getProjectGradient(project.image) }}
-              >
-                <div className={styles.cardImageOverlay} />
-                <span className={styles.cardYear}>{project.year}</span>
-                <div className={styles.cardLinks}>
-                  {project.liveUrl && (
-                    <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className={styles.cardLink}>
-                      <ExternalLink size={16} />
-                    </a>
-                  )}
-                  {project.githubUrl && (
-                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className={styles.cardLink}>
-                      <Github size={16} />
-                    </a>
-                  )}
-                </div>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Featured Projects</h2>
+        <a href="/projects" className={styles.seeAll}>See all projects →</a>
+      </div>
+      <div className={styles.grid}>
+        {featured.map((p) => (
+          <div key={p.id} className={styles.card}>
+            <div className={styles.img} style={{ background: GRAD[p.image] ?? 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+              <span className={styles.imgLabel}>{p.title[0]}</span>
+            </div>
+            <div className={styles.body}>
+              <h3 className={styles.cardTitle}>{p.title}</h3>
+              <p className={styles.cardDesc}>{p.description}</p>
+              <div className={styles.tags}>
+                {p.tags.slice(0, 3).map((t) => (
+                  <span key={t} className={styles.tag}>{t}</span>
+                ))}
               </div>
-              <div className={styles.cardBody}>
-                <h3 className={styles.cardTitle}>{project.title}</h3>
-                <p className={styles.cardDesc}>{project.description}</p>
-                <div className={styles.cardTags}>
-                  {project.tags.slice(0, 4).map((tag) => (
-                    <Badge key={tag}>{tag}</Badge>
-                  ))}
-                </div>
+              <div className={styles.links}>
+                {p.liveUrl && <a href={p.liveUrl} target="_blank" rel="noreferrer" className={styles.link}>Live ↗</a>}
+                {p.githubUrl && <a href={p.githubUrl} target="_blank" rel="noreferrer" className={styles.link}>GitHub ↗</a>}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </section>
   );
