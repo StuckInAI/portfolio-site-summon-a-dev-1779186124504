@@ -1,15 +1,8 @@
 import { usePortfolio } from '@/context/PortfolioContext';
-import { defaultProfile, defaultExperiences } from '@/lib/data';
 import styles from './AboutPage.module.css';
 
 export default function AboutPage() {
-  let profile = defaultProfile;
-  let experiences = defaultExperiences;
-  try {
-    const ctx = usePortfolio();
-    profile = ctx.profile;
-    experiences = ctx.experiences;
-  } catch { /* outside provider */ }
+  const { profile, experiences, loading } = usePortfolio();
 
   return (
     <div className={styles.page}>
@@ -19,45 +12,51 @@ export default function AboutPage() {
         <p className={styles.title}>{profile.title}</p>
       </div>
 
-      <div className={styles.content}>
-        <section className={styles.bio}>
-          <p>{profile.bio1}</p>
-          <p>{profile.bio2}</p>
-        </section>
+      {loading ? (
+        <div className={styles.loading}><div className={styles.spinner} /></div>
+      ) : (
+        <div className={styles.content}>
+          <div className={styles.bio}>
+            <h2 className={styles.sectionTitle}>About Me</h2>
+            <p className={styles.bioText}>{profile.bio1}</p>
+            <p className={styles.bioText}>{profile.bio2}</p>
+            <div className={styles.details}>
+              <div className={styles.detail}><span className={styles.detailLabel}>Location</span><span>{profile.location}</span></div>
+              <div className={styles.detail}><span className={styles.detailLabel}>Timezone</span><span>{profile.timezone}</span></div>
+              <div className={styles.detail}><span className={styles.detailLabel}>Availability</span><span className={styles.available}>{profile.availability}</span></div>
+            </div>
+            <div className={styles.socials}>
+              <a href={`mailto:${profile.email}`} className={styles.socialLink}>Email</a>
+              <a href={profile.github} target="_blank" rel="noreferrer" className={styles.socialLink}>GitHub</a>
+              <a href={profile.linkedin} target="_blank" rel="noreferrer" className={styles.socialLink}>LinkedIn</a>
+              <a href={profile.twitter} target="_blank" rel="noreferrer" className={styles.socialLink}>Twitter</a>
+            </div>
+          </div>
 
-        <section>
-          <h2 className={styles.sectionTitle}>Experience</h2>
-          <div className={styles.timeline}>
-            {experiences.map((exp) => (
-              <div key={exp.id} className={styles.expCard}>
-                <div className={styles.expHeader}>
-                  <div>
-                    <h3 className={styles.expRole}>{exp.role}</h3>
-                    <div className={styles.expCompany}>{exp.company}</div>
+          <div className={styles.experience}>
+            <h2 className={styles.sectionTitle}>Experience</h2>
+            <div className={styles.timeline}>
+              {experiences.map((exp) => (
+                <div key={exp.id} className={styles.expCard}>
+                  <div className={styles.expHeader}>
+                    <div>
+                      <h3 className={styles.expRole}>{exp.role}</h3>
+                      <p className={styles.expCompany}>{exp.company}</p>
+                    </div>
+                    <span className={styles.expPeriod}>{exp.period}</span>
                   </div>
-                  <span className={styles.expPeriod}>{exp.period}</span>
+                  <ul className={styles.expDesc}>
+                    {exp.description.map((d, i) => <li key={i}>{d}</li>)}
+                  </ul>
+                  <div className={styles.techTags}>
+                    {exp.tech.map((t) => <span key={t} className={styles.techTag}>{t}</span>)}
+                  </div>
                 </div>
-                <ul className={styles.expDesc}>
-                  {exp.description.map((d, i) => <li key={i}>{d}</li>)}
-                </ul>
-                <div className={styles.tags}>
-                  {exp.tech.map((t) => <span key={t} className={styles.tag}>{t}</span>)}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </section>
-
-        <section>
-          <h2 className={styles.sectionTitle}>Details</h2>
-          <div className={styles.details}>
-            <div className={styles.detail}><span>📍</span> {profile.location}</div>
-            <div className={styles.detail}><span>🕐</span> {profile.timezone}</div>
-            <div className={styles.detail}><span>✅</span> {profile.availability}</div>
-            <div className={styles.detail}><span>📧</span> {profile.email}</div>
-          </div>
-        </section>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

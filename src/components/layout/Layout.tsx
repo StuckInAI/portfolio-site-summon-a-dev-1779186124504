@@ -6,20 +6,21 @@ export default function Layout() {
     <div className={styles.root}>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <NavLink to="/" className={styles.logo} end>AR</NavLink>
+          <a href="/" className={styles.logo}>AR</a>
           <div className={styles.links}>
-            <NavLink to="/" end className={({ isActive }) => isActive ? `${styles.link} ${styles.active}` : styles.link}>Home</NavLink>
-            <NavLink to="/projects" className={({ isActive }) => isActive ? `${styles.link} ${styles.active}` : styles.link}>Projects</NavLink>
-            <NavLink to="/about" className={({ isActive }) => isActive ? `${styles.link} ${styles.active}` : styles.link}>About</NavLink>
-            <NavLink to="/contact" className={({ isActive }) => isActive ? `${styles.link} ${styles.active}` : styles.link}>Contact</NavLink>
+            <NavLink to="/" end className={({ isActive }) => isActive ? styles.active : styles.navLink}>Home</NavLink>
+            <NavLink to="/projects" className={({ isActive }) => isActive ? styles.active : styles.navLink}>Projects</NavLink>
+            <NavLink to="/about" className={({ isActive }) => isActive ? styles.active : styles.navLink}>About</NavLink>
+            <NavLink to="/contact" className={({ isActive }) => isActive ? styles.active : styles.navLink}>Contact</NavLink>
           </div>
+          <a href="/admin" className={styles.adminBtn}>Admin</a>
         </nav>
       </header>
       <main className={styles.main}>
         <Outlet />
       </main>
       <footer className={styles.footer}>
-        <p>© {new Date().getFullYear()} — Built with React &amp; Supabase</p>
+        <p>© {new Date().getFullYear()} Portfolio. Built with React & Supabase.</p>
       </footer>
     </div>
   );

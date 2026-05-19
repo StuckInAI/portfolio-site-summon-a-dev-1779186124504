@@ -1,15 +1,8 @@
 import { usePortfolio } from '@/context/PortfolioContext';
-import { defaultProfile } from '@/lib/data';
 import styles from './HeroSection.module.css';
 
 export default function HeroSection() {
-  let profile = defaultProfile;
-  try {
-    const ctx = usePortfolio();
-    profile = ctx.profile;
-  } catch {
-    // outside provider — use default
-  }
+  const { profile } = usePortfolio();
 
   return (
     <section className={styles.hero}>

@@ -3,38 +3,58 @@
 }
 
 .inner {
-  max-width: 640px;
+  max-width: 680px;
   margin: 0 auto;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 1.5rem;
+  padding: 3.5rem 2rem;
 }
 
 .title {
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
   font-weight: 800;
-  color: #f9fafb;
-  margin: 0;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
 }
 
 .sub {
   font-size: 1rem;
-  color: #9ca3af;
-  margin: 0;
+  color: #94a3b8;
   line-height: 1.7;
+  margin: 0 0 2rem;
 }
 
-.btn {
-  display: inline-block;
-  padding: 0.85rem 2.25rem;
-  background: #6366f1;
+.ctas {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
-  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  border-radius: 0.75rem;
   font-weight: 600;
+  font-size: 0.95rem;
   text-decoration: none;
-  margin-top: 0.5rem;
+  transition: opacity 0.2s;
+}
+.btnPrimary:hover { opacity: 0.85; }
+
+.btnSecondary {
+  background: rgba(248, 250, 252, 0.06);
+  color: #f8fafc;
+  padding: 0.75rem 2rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid rgba(248, 250, 252, 0.12);
   transition: background 0.2s;
 }
-.btn:hover { background: #4f46e5; }
+.btnSecondary:hover { background: rgba(248, 250, 252, 0.1); }

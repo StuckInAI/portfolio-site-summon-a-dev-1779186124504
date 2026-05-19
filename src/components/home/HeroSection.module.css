@@ -4,20 +4,22 @@
   align-items: center;
   text-align: center;
   padding: 6rem 1.5rem 4rem;
-  gap: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(99,102,241,0.12);
-  color: #818cf8;
-  border: 1px solid rgba(99,102,241,0.25);
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 999px;
   padding: 0.35rem 1rem;
   font-size: 0.85rem;
   font-weight: 500;
+  margin-bottom: 2rem;
 }
 
 .dot {
@@ -29,32 +31,35 @@
 }
 
 @keyframes pulse {
-  0%,100% { opacity: 1; }
+  0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 
 .heading {
-  font-size: clamp(2rem, 6vw, 3.75rem);
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
   font-weight: 800;
-  line-height: 1.15;
-  color: #f9fafb;
-  max-width: 800px;
-  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 0 1.25rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .sub {
   font-size: 1.1rem;
-  color: #9ca3af;
-  max-width: 580px;
+  color: #94a3b8;
   line-height: 1.7;
-  margin: 0;
+  margin: 0 0 2.5rem;
+  max-width: 600px;
 }
 
 .stats {
   display: flex;
   align-items: center;
   gap: 2rem;
-  margin-top: 0.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .stat {
@@ -65,22 +70,23 @@
 }
 
 .statNum {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 800;
-  color: #6366f1;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
 }
 
 .statLabel {
-  font-size: 0.8rem;
-  color: #6b7280;
+  font-size: 0.78rem;
+  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .statDivider {
   width: 1px;
   height: 40px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(148, 163, 184, 0.2);
 }
 
 .ctas {
@@ -88,31 +94,29 @@
   gap: 1rem;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 0.5rem;
 }
 
 .btnPrimary {
-  padding: 0.75rem 2rem;
-  background: #6366f1;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
-  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  border-radius: 0.75rem;
   font-weight: 600;
+  font-size: 0.95rem;
   text-decoration: none;
-  transition: background 0.2s;
+  transition: opacity 0.2s;
 }
-.btnPrimary:hover { background: #4f46e5; }
+.btnPrimary:hover { opacity: 0.85; }
 
 .btnSecondary {
+  background: rgba(248, 250, 252, 0.06);
+  color: #f8fafc;
   padding: 0.75rem 2rem;
-  background: transparent;
-  color: #d1d5db;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
+  border-radius: 0.75rem;
   font-weight: 600;
+  font-size: 0.95rem;
   text-decoration: none;
-  transition: background 0.2s, border-color 0.2s;
+  border: 1px solid rgba(248, 250, 252, 0.12);
+  transition: background 0.2s;
 }
-.btnSecondary:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.25);
-}
+.btnSecondary:hover { background: rgba(248, 250, 252, 0.1); }

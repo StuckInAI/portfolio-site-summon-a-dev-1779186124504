@@ -1,5 +1,4 @@
 import { usePortfolio } from '@/context/PortfolioContext';
-import { defaultProjects } from '@/lib/data';
 import styles from './FeaturedProjects.module.css';
 
 const GRAD: Record<string, string> = {
@@ -9,11 +8,8 @@ const GRAD: Record<string, string> = {
 };
 
 export default function FeaturedProjects() {
-  let featured = defaultProjects.filter((p) => p.featured);
-  try {
-    const ctx = usePortfolio();
-    featured = ctx.projects.filter((p) => p.featured);
-  } catch { /* outside provider */ }
+  const { projects } = usePortfolio();
+  const featured = projects.filter((p) => p.featured);
 
   return (
     <section className={styles.section}>
